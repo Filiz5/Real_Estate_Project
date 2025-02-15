@@ -1,0 +1,16 @@
+resources:
+  - app-deployment.yaml
+  - app-service.yaml
+  - db-deployment.yaml
+  - db-service.yaml
+  - ui-deployment.yaml
+  - ui-ingress.yaml
+  - ui-service.yaml
+
+images:
+  - name: IMAGE_TAG_FR
+    newName: "${IMAGE_TAG_FE}"
+  - name: IMAGE_TAG_BK
+    newName: "${IMAGE_TAG_BE}"
+
+namespace: brc
