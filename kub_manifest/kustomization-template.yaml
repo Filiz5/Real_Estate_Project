@@ -1,11 +1,11 @@
 resources:
-  - app-deployment.yaml
-  - app-service.yaml
+  - true-roots-backend-deployment.yaml
+  - true-roots-backend-service.yaml
   - db-deployment.yaml
   - db-service.yaml
-  - ui-deployment.yaml
-  - ui-ingress.yaml
-  - ui-service.yaml
+  - true-roots-frondtend-deployment.yaml
+  - true-roots-frondtend-ingress.yaml
+  - true-roots-frondtend-service.yaml
 
 images:
   - name: IMAGE_TAG_FR
