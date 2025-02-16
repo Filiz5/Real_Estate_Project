@@ -11,28 +11,6 @@ provider "aws" {
   region = "us-east-1"
 }
 
-resource "aws_iam_role" "aws_access" {
-  name = "awsrole-${var.user}"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action    = "sts:AssumeRole"
-        Effect    = "Allow"
-        Sid       = ""
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-      },
-    ]
-  })
-  managed_policy_arns = ["arn:aws:iam::aws:policy/AdministratorAccess"]
-}
-
-resource "aws_iam_instance_profile" "ec2-profile" {
-  name = "jenkins-profile-${var.user}"
-  role = aws_iam_role.aws_access.name
-}
 
 resource "aws_security_group" "jenkins-sec-gr" {
   name = "${var.jenkins_sg}-${var.user}"
