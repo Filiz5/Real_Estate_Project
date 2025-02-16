@@ -11,7 +11,7 @@ variable "tag" {
 }
 
 variable "jenkins_sg" {
-  default = "k3s-sec-gr"  # Security Group adı
+  default = "jenkins-sec-gr"  # Security Group adı
 }
 
 variable "user" {
