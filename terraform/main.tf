@@ -12,14 +12,14 @@ provider "aws" {
 }
 
 resource "aws_iam_instance_profile" "ec2-profile" {
-  name = "jenkins-profile-${var.user}"
+  name = "new_profile"
   role = "admin"
 }
 
-resource "aws_security_group" "jenkins-sec-gr" {
-  name = "${var.jenkins_sg}-${var.user}"
+resource "aws_security_group" "new-sec-gr" {
+  name = "realestate_sg"
   tags = {
-    Name = var.jenkins_sg
+    Name = "realestate_sg"
   }
 
   dynamic "ingress" {
@@ -44,7 +44,7 @@ resource "aws_instance" "k3s-server" {
   ami                    = "ami-04b70fa74e45c3917"  # Ubuntu 22.04 LTS (us-east-1)
   instance_type          = var.instancetype
   key_name               = var.mykey
-  vpc_security_group_ids = [aws_security_group.jenkins-sec-gr.id]
+  vpc_security_group_ids = [aws_security_group.new-sec-gr.id]
   iam_instance_profile   = aws_iam_instance_profile.ec2-profile.name
 
   root_block_device {
