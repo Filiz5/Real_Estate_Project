@@ -11,6 +11,10 @@ provider "aws" {
   region = "us-east-1"
 }
 
+resource "aws_iam_instance_profile" "ec2-profile" {
+  name = "jenkins-profile-${var.user}"
+  role = "admin"
+}
 
 resource "aws_security_group" "jenkins-sec-gr" {
   name = "${var.jenkins_sg}-${var.user}"
