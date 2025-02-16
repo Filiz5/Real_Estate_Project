@@ -57,27 +57,3 @@ resource "aws_instance" "k3s-server" {
 
   user_data = file("userdata.sh")
 }
-
-resource "aws_security_group" "jenkins-sec-gr" {
-  name = "${var.jenkins_sg}-${var.user}"
-  tags = {
-    Name = var.jenkins_sg
-  }
-
-  dynamic "ingress" {
-    for_each = [22, 6443, 80, 3000, 5432, 443, 8081, 30001, 8080, 8090]
-    content {
-      from_port   = ingress.value
-      to_port     = ingress.value
-      protocol    = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]
-    }
-  }
-
-  egress {
-    from_port   = 0
-    protocol    = -1
-    to_port     = 0
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
