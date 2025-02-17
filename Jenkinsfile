@@ -51,23 +51,17 @@ pipeline {
                 }
             }
         }
-
-        stage('Wait for the Instance') {
+        
+        stage('wait the instance') {
             steps {
                 script {
                     echo 'Waiting for the instance'
-
-                    dir('terraform') {
-                        env.INSTANCE_ID = sh(script: "terraform output -raw instance_id", returnStdout: true).trim()
-                    }
-
-                    echo "Instance ID: ${env.INSTANCE_ID}"
-
-                    // AWS CLI ile instance'ın status-ok olmasını bekle
-                    sh "aws ec2 wait instance-status-ok --instance-ids ${env.INSTANCE_ID}"
+                    id = sh(script: 'aws ec2 describe-instances --filters Name=tag-value,Values="${ENVIRONMENT}_server" Name=instance-state-name,Values=running --query Reservations[*].Instances[*].[InstanceId] --output text',  returnStdout:true).trim()
+                    sh 'aws ec2 wait instance-status-ok --instance-ids $id'
                 }
             }
         }
+
 
         stage('ENV REACT UPDATE') {
             steps {
