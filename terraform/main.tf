@@ -12,7 +12,7 @@ provider "aws" {
 }
 
 resource "aws_iam_instance_profile" "ec2-profile" {
-  name = "new_profile"
+  name = "kub_profile"
   role = "admin"
 }
 
