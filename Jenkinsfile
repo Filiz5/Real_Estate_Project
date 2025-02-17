@@ -41,11 +41,13 @@ pipeline {
         stage('Push Images to Docker Hub') {
             steps {
                 echo "Pushing App Images to Docker Hub"
-                sh """
-                    docker login -u esenkaya123 -p Canahmet63
-                    docker push "${IMAGE_TAG_FE}"
-                    docker push "${IMAGE_TAG_BE}"
-                """
+                withCredentials([string(credentialsId: 'docker-hub-password', variable: 'DOCKER_PASSWORD')]) {
+                    sh """
+                        echo "$DOCKER_PASSWORD" | docker login -u esenkaya123 --password-stdin
+                        docker push "${IMAGE_TAG_FE}"
+                        docker push "${IMAGE_TAG_BE}"
+                    """
+                }
             }
         }
 
@@ -106,27 +108,34 @@ pipeline {
     }
 
     post {
-    always {
-        echo 'Cleaning up local Docker images'
-        sh 'docker image prune -af'
-    }
-
-    success {
-        echo 'Pipeline successfully completed.'
-        def userInput = false
-        timeout(time: 5, unit: 'DAYS') {
-            userInput = input message: 'Pipeline tamamlandı. Terraform’u destroy etmek istiyor musunuz?', parameters: [booleanParam(defaultValue: false, description: '', name: 'Destroy')]
+        always {
+            echo 'Cleaning up local Docker images'
+            sh 'docker image prune -af'
         }
-        if (userInput) {
-            echo 'Terraform destroy işlemi başlatılıyor...'
-            sh 'terraform destroy -auto-approve'
-        } else {
-            echo 'Terraform destroy işlemi iptal edildi.'
-        }
-    }
 
-    failure {
-        echo 'Pipeline failed. Terraform destroy işlemi başlatılıyor...'
-        sh 'terraform destroy -auto-approve'
+        success {
+            echo 'Pipeline successfully completed.'
+            timeout(time: 5, unit: 'DAYS') {
+                def userInput = input message: 'Pipeline tamamlandı. Terraform’u destroy etmek istiyor musunuz?', 
+                    parameters: [booleanParam(defaultValue: false, description: '', name: 'Destroy')]
+                if (userInput) {
+                    echo 'Terraform destroy işlemi başlatılıyor...'
+                    sh """
+                        cd terraform
+                        terraform destroy -auto-approve
+                    """
+                } else {
+                    echo 'Terraform destroy işlemi iptal edildi.'
+                }
+            }
+        }
+
+        failure {
+            echo 'Pipeline failed. Terraform destroy işlemi başlatılıyor...'
+            sh """
+                cd terraform
+                terraform destroy -auto-approve
+            """
+        }
     }
 }
