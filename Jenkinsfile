@@ -5,17 +5,17 @@ pipeline {
         APP_REPO_NAME = "esenkaya123/real_estate-team1"
     }
 
-
     stages {
         stage('Create Key Pair for AWS instance') {
             steps {
-                echo "Creating Key Pair "
+                echo "Creating Key Pair"
                 sh """
                     aws ec2 create-key-pair --region us-east-1 --key-name k3sKey --query KeyMaterial --output text > k3sKey
                     chmod 400 k3sKey
                 """
             }
-        
+        }
+
         stage('Create AWS Resources') {
             steps {
                 dir('terraform') {
@@ -61,17 +61,23 @@ pipeline {
                 }
             }
         }
-        
-        stage('wait the instance') {
+
+        stage('Wait for the Instance') {
             steps {
                 script {
                     echo 'Waiting for the instance'
-                    id = sh(script: 'aws ec2 describe-instances --filters Name=tag-value,Values="K3s-Server" Name=instance-state-name,Values=running --query Reservations[*].Instances[*].[InstanceId] --output text',  returnStdout:true).trim()
-                    sh 'aws ec2 wait instance-status-ok --instance-ids $id'
+                    def instance_id = sh(script: '''
+                        aws ec2 describe-instances \
+                        --filters "Name=tag-value,Values=K3s-Server" "Name=instance-state-name,Values=running" \
+                        --query "Reservations[*].Instances[*].[InstanceId]" --output text
+                    ''', returnStdout: true).trim()
+
+                    echo "Instance ID: ${instance_id}"
+
+                    sh "aws ec2 wait instance-status-ok --instance-ids ${instance_id}"
                 }
             }
         }
-
 
         stage('ENV REACT UPDATE') {
             steps {
@@ -102,7 +108,6 @@ pipeline {
                         export KUBECONFIG=/var/lib/jenkins/kubeconfig.yaml
                         envsubst < kustomization-template.yaml > kustomization.yaml
                         kubectl apply -k .
-                        EOF
                     """
                 }
             }
@@ -114,36 +119,35 @@ pipeline {
             echo 'Deleting all local images'
             sh 'docker image prune -af'
         }
+
         success {
             echo 'Delete the Key Pair'
-                timeout(time:5, unit:'DAYS'){
-                input message:'Approve terminate'
-                }
-           sh """
-                aws ec2 delete-key-pair --region us-east-1 --key-name k3sKey
-                rm -rf k3sKey
-                """
-            echo 'Delete AWS Resources'            
-                sh """
-                cd terraform
-                terraform destroy --auto-approve
-                """
-        }
-        failure {
-            echo 'Delete the Key Pair'
-                timeout(time:5, unit:'DAYS'){
-                input message:'Approve terminate'
-                }
-            echo 'Delete the Key Pair'
+            timeout(time: 5, unit: 'DAYS') {
+                input message: 'Approve terminate'
+            }
             sh """
                 aws ec2 delete-key-pair --region us-east-1 --key-name k3sKey
                 rm -rf k3sKey
-                """
-            echo 'Delete AWS Resources'            
-                sh """
-                cd terraform
-                terraform destroy --auto-approve
-                """
+            """
+            echo 'Delete AWS Resources'
+            dir('terraform') {
+                sh 'terraform destroy --auto-approve'
+            }
+        }
+
+        failure {
+            echo 'Pipeline failed. Deleting resources...'
+            timeout(time: 5, unit: 'DAYS') {
+                input message: 'Approve terminate'
+            }
+            sh """
+                aws ec2 delete-key-pair --region us-east-1 --key-name k3sKey
+                rm -rf k3sKey
+            """
+            echo 'Delete AWS Resources'
+            dir('terraform') {
+                sh 'terraform destroy --auto-approve'
+            }
         }
     }
 }
