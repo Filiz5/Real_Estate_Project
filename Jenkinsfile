@@ -107,6 +107,7 @@ pipeline {
                     sh """
                         cd kub_manifest
                         ssh -o StrictHostKeyChecking=no ${JENKINS_USER}@${NODE_IP} 'sudo cat /etc/rancher/k3s/k3s.yaml' > ${KUBECONFIG_PATH}
+                        ssh -i /var/lib/jenkins/workspace/k3s/k3sKey -o StrictHostKeyChecking=no ${JENKINS_USER}@${NODE_IP} sudo cat /etc/rancher/k3s/k3s.yaml > ${KUBECONFIG_PATH}
                         sed -i 's/127.0.0.1/${NODE_IP}/g' ${KUBECONFIG_PATH} 
                         export KUBECONFIG=${KUBECONFIG_PATH}
                         envsubst < kustomization-template.yaml > kustomization.yaml
