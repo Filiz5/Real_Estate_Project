@@ -109,33 +109,30 @@ pipeline {
 
     post {
         always {
-            echo 'Cleaning up local Docker images'
+            echo 'Deleting all local images'
             sh 'docker image prune -af'
-        }
+        }        
 
         success {
             echo 'Pipeline successfully completed.'
             timeout(time: 5, unit: 'DAYS') {
-                def userInput = input message: 'Pipeline tamamlandı. Terraform’u destroy etmek istiyor musunuz?', 
-                    parameters: [booleanParam(defaultValue: false, description: '', name: 'Destroy')]
-                if (userInput) {
-                    echo 'Terraform destroy işlemi başlatılıyor...'
-                    sh """
-                        cd terraform
-                        terraform destroy -auto-approve
-                    """
-                } else {
-                    echo 'Terraform destroy işlemi iptal edildi.'
+                script {
+                    def userInput = input message: 'Pipeline tamamlandı. Terraform’u destroy etmek istiyor musunuz?', 
+                        parameters: [booleanParam(defaultValue: false, description: '', name: 'Destroy')]
+                    
+                    if (userInput) {
+                        echo 'Terraform destroy işlemi başlatılıyor...'
+                        sh 'terraform destroy -auto-approve'
+                    } else {
+                        echo 'Terraform destroy işlemi iptal edildi.'
+                    }
                 }
             }
         }
 
         failure {
             echo 'Pipeline failed. Terraform destroy işlemi başlatılıyor...'
-            sh """
-                cd terraform
-                terraform destroy -auto-approve
-            """
+            sh 'terraform destroy -auto-approve'
         }
     }
 }
