@@ -1,5 +1,5 @@
 variable "mykey" {
-  default = "Meliskey"  # SSH Key Pair
+  default = "k3sKey"  # SSH Key Pair
 }
 
 variable "instancetype" {
