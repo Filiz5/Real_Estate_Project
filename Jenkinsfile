@@ -114,31 +114,36 @@ pipeline {
             echo 'Deleting all local images'
             sh 'docker image prune -af'
         }
-
         success {
-            echo 'Pipeline successfully completed.'
-            timeout(time: 5, unit: 'DAYS') {
-                script {
-                    def userInput = input message: 'Pipeline tamamlandı. Terraform’u destroy etmek istiyor musunuz?', 
-                        parameters: [booleanParam(defaultValue: false, description: '', name: 'Destroy')]
-
-                    if (userInput) {
-                        echo 'Terraform destroy işlemi başlatılıyor...'
-                        dir('terraform') { 
-                            sh 'terraform destroy -auto-approve'
-                        }
-                    } else {
-                        echo 'Terraform destroy işlemi iptal edildi.'
-                    }
+            echo 'Delete the Key Pair'
+                timeout(time:5, unit:'DAYS'){
+                input message:'Approve terminate'
                 }
-            }
+           sh """
+                aws ec2 delete-key-pair --region us-east-1 --key-name k3sKey
+                rm -rf k3sKey
+                """
+            echo 'Delete AWS Resources'            
+                sh """
+                cd terraform
+                terraform destroy --auto-approve
+                """
         }
-
         failure {
-            echo 'Pipeline failed. Terraform destroy işlemi başlatılıyor...'
-            dir('terraform') { 
-                sh 'terraform destroy -auto-approve'
-            }
+            echo 'Delete the Key Pair'
+                timeout(time:5, unit:'DAYS'){
+                input message:'Approve terminate'
+                }
+            echo 'Delete the Key Pair'
+            sh """
+                aws ec2 delete-key-pair --region us-east-1 --key-name k3sKey
+                rm -rf k3sKey
+                """
+            echo 'Delete AWS Resources'            
+                sh """
+                cd terraform
+                terraform destroy --auto-approve
+                """
         }
     }
 }
