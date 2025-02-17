@@ -5,7 +5,17 @@ pipeline {
         APP_REPO_NAME = "esenkaya123/real_estate-team1"
     }
 
+
     stages {
+        stage('Create Key Pair for AWS instance') {
+            steps {
+                echo "Creating Key Pair "
+                sh """
+                    aws ec2 create-key-pair --region us-east-1 --key-name k3sKey --query KeyMaterial --output text > k3sKey
+                    chmod 400 k3sKey
+                """
+            }
+        
         stage('Create AWS Resources') {
             steps {
                 dir('terraform') {
