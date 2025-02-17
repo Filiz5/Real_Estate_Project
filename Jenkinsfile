@@ -8,11 +8,12 @@ pipeline {
     stages {
         stage('Create AWS Resources') {
             steps {
-                sh """
-                    cd terraform
-                    terraform init
-                    terraform apply -auto-approve
-                """
+                dir('terraform') {
+                    sh """
+                        terraform init
+                        terraform apply -auto-approve
+                    """
+                }
             }
         }
 
@@ -56,7 +57,6 @@ pipeline {
                 script {
                     echo 'Waiting for the instance'
 
-                    // Terraform çıktısından instance ID'yi al ve ortam değişkeni olarak ata
                     dir('terraform') {
                         env.INSTANCE_ID = sh(script: "terraform output -raw instance_id", returnStdout: true).trim()
                     }
@@ -86,14 +86,12 @@ pipeline {
                 script {
                     echo 'Deploying Application to Kubernetes on the new instance'
 
-                    // Terraform’dan oluşturulan makinenin IP’sini al
                     dir('terraform') {
                         env.NODE_IP = sh(script: 'terraform output -raw public_ip', returnStdout: true).trim()
                     }
 
                     echo "New EC2 Instance IP: ${env.NODE_IP}"
 
-                    // SSH ile yeni makineye bağlan ve kubectl apply komutlarını çalıştır
                     sh """
                         ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/aws-key.pem ubuntu@${NODE_IP} <<EOF
                         export KUBECONFIG=/var/lib/jenkins/kubeconfig.yaml
@@ -111,7 +109,7 @@ pipeline {
         always {
             echo 'Deleting all local images'
             sh 'docker image prune -af'
-        }        
+        }
 
         success {
             echo 'Pipeline successfully completed.'
@@ -119,10 +117,12 @@ pipeline {
                 script {
                     def userInput = input message: 'Pipeline tamamlandı. Terraform’u destroy etmek istiyor musunuz?', 
                         parameters: [booleanParam(defaultValue: false, description: '', name: 'Destroy')]
-                    
+
                     if (userInput) {
                         echo 'Terraform destroy işlemi başlatılıyor...'
-                        sh 'terraform destroy -auto-approve'
+                        dir('terraform') { 
+                            sh 'terraform destroy -auto-approve'
+                        }
                     } else {
                         echo 'Terraform destroy işlemi iptal edildi.'
                     }
@@ -132,7 +132,9 @@ pipeline {
 
         failure {
             echo 'Pipeline failed. Terraform destroy işlemi başlatılıyor...'
-            sh 'terraform destroy -auto-approve'
+            dir('terraform') { 
+                sh 'terraform destroy -auto-approve'
+            }
         }
     }
 }
