@@ -93,10 +93,10 @@ pipeline {
                     echo "New EC2 Instance IP: ${env.NODE_IP}"
 
                     sh """
-                        ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/aws-key.pem ubuntu@${NODE_IP} <<EOF
+                        cd kub_manifest
+                        sed -i 's/127.0.0.1/${NODE_IP}/g' /var/lib/jenkins/kubeconfig.yaml
                         export KUBECONFIG=/var/lib/jenkins/kubeconfig.yaml
-                        cd /home/ubuntu/kub_manifest
-                        envsubst < kustomization-template.yaml > kustomization.yml
+                        envsubst < kustomization-template.yaml > kustomization.yaml
                         kubectl apply -k .
                         EOF
                     """
