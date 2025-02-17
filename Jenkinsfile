@@ -3,6 +3,9 @@ pipeline {
 
     environment {
         APP_REPO_NAME = "esenkaya123/real_estate-team1"
+        K3S_IP = "${NODE_IP}"
+        JENKINS_USER = "jenkins"  // Eğer farklıysa değiştir
+        KUBECONFIG_PATH = "/var/lib/jenkins/kubeconfig.yaml"
     }
 
     stages {
@@ -104,7 +107,8 @@ pipeline {
 
                     sh """
                         cd kub_manifest
-                        sed -i 's/127.0.0.1/${NODE_IP}/g' /var/lib/jenkins/kubeconfig.yaml
+                        ssh -o StrictHostKeyChecking=no ${JENKINS_USER}@${K3S_IP} 'sudo cat /etc/rancher/k3s/k3s.yaml' > ${KUBECONFIG_PATH}
+                        sed -i 's/127.0.0.1/${K3S_IP}/g' ${KUBECONFIG_PATH} 
                         export KUBECONFIG=/var/lib/jenkins/kubeconfig.yaml
                         envsubst < kustomization-template.yaml > kustomization.yaml
                         kubectl apply -k .
