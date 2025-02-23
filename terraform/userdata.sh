@@ -42,7 +42,7 @@ curl -L https://github.com/kubernetes/kompose/releases/download/v1.30.0/kompose-
 chmod +x /usr/local/bin/kompose
 
 # K3s Kurulumu (Kubernetes Hafif Dağıtımı)
-curl -sfL https://get.k3s.io | sh -
+curl -sfL https://get.k3s.io | sh -s - --tls-san $(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
 systemctl enable k3s
 systemctl start k3s
 
