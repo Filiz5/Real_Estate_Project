@@ -41,8 +41,15 @@ apt update && apt install -y kubectl
 curl -L https://github.com/kubernetes/kompose/releases/download/v1.30.0/kompose-linux-amd64 -o /usr/local/bin/kompose
 chmod +x /usr/local/bin/kompose
 
-# K3s Kurulumu (Kubernetes Hafif Dağıtımı)
-curl -sfL https://get.k3s.io | sh -s - --tls-san $(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
+# K3s Kurulumu (IMDSv2 uyumlu, garantili yöntem)
+TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" \
+  -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+
+PUBLIC_IP=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" \
+  http://169.254.169.254/latest/meta-data/public-ipv4)
+
+curl -sfL https://get.k3s.io | sh -s - --tls-san $PUBLIC_IP
+
 systemctl enable k3s
 systemctl start k3s
 
