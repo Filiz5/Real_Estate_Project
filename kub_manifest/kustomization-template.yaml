@@ -1,4 +1,5 @@
 resources:
+  - namespace.yaml
   - true-roots-backend-deployment.yaml
   - true-roots-backend-service.yaml
   - db-deployment.yaml
