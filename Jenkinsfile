@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         APP_REPO_NAME = "esenkaya123/real_estate-team1"
-        JENKINS_USER = "jenkins"  // Eğer farklıysa değiştir
+        JENKINS_USER = "ubuntu"  // Eğer farklıysa değiştir
         KUBECONFIG_PATH = "/var/lib/jenkins/kubeconfig.yaml"
     }
 
