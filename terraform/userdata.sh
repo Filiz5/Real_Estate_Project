@@ -3,7 +3,7 @@
 apt update -y && apt upgrade -y
 
 # Hostname Ayarı
-hostnamectl set-hostname jenkins-server
+hostnamectl set-hostname k3s-server
 
 # Gerekli Paketlerin Kurulumu
 apt install -y git curl wget unzip apt-transport-https ca-certificates gnupg lsb-release software-properties-common
